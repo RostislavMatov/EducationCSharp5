@@ -81,31 +81,42 @@ namespace EducationCSharp5
 
         class Menu
         {
-            
-            string[] Bottom1 { get; set; } = { "9", "Exit" };
-            string[] Bottom2 { get; set; } = { "0", "Save" };
-
+            public BottomMenu[] menu { get; set; }
             public struct BottomMenu
             {
-                public string[] Exit { get; set; }
-                public string[] Save { get; set; }
+                public string Name { get; set; }
+                public string Bottom { get; set; }
+            }
+            public Menu()
+            {
+                menu = new BottomMenu[2];
 
-                public BottomMenu(Menu menu)
-                {
-                    Exit = menu.Bottom1;
+                BottomMenu Exit = new BottomMenu();
+                Exit.Name = "exit";
+                Exit.Bottom = "0";
 
-                    Save = menu.Bottom2;
-                }
+                BottomMenu Save = new BottomMenu();
+                Save.Name = "save";
+                Save.Bottom = "9";
 
+                menu[0] = Exit;
+                menu[1] = Save;
             }
 
-            public static void WindowMenu(Menu.BottomMenu bottomMenu)
+            public static void WindowMenu(Menu menuObj)
             {
-
+                Console.WriteLine("___________Меню игры___________");
+                Console.WriteLine("Нажмите________________Действие");
+                for (int i = 0; i < menuObj.menu.Length; i++)
+                {
+                    Console.WriteLine($"{menuObj.menu[i].Bottom}__________________________{menuObj.menu[i].Name}");
+                }
             }
 
             static void Main(string[] args)
             {
+
+                Menu menu = new Menu();
 
                 List<Player> list = new List<Player>();
 
@@ -124,6 +135,7 @@ namespace EducationCSharp5
                 Console.WriteLine(player.Name);
                 Console.WriteLine(player.Health);
 
+                Menu.WindowMenu(menu);
 
 
             }
