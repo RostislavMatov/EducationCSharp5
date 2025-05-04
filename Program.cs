@@ -18,7 +18,7 @@ namespace EducationCSharp5
             public int Defense { get; set; }
             public int Experience { get; set; }
 
-            public static void CreatePlayer(out Player player,string namePlayer)
+            public static void CreatePlayer(out Player player, string namePlayer)
             {
                 player = new Player();
                 player.Name = namePlayer;
@@ -81,40 +81,52 @@ namespace EducationCSharp5
 
         class Menu
         {
-            string[] bottom1 { get; set; } = { "9", "Exit" };
-            string[] bottom2 { get; set; } = { "0", "Save" };
+            
+            string[] Bottom1 { get; set; } = { "9", "Exit" };
+            string[] Bottom2 { get; set; } = { "0", "Save" };
 
-            public static void WindowMenu(Menu menu)
+            public struct BottomMenu
             {
-                foreach (var item in menu)
+                public string[] Exit { get; set; }
+                public string[] Save { get; set; }
+
+                public BottomMenu(Menu menu)
                 {
-                    
+                    Exit = menu.Bottom1;
+
+                    Save = menu.Bottom2;
                 }
 
             }
 
-        static void Main(string[] args)
-        {
-
-            List<Player> list = new List<Player>();
-            
-            string namePlayer;
-            Console.WriteLine("Введите имя игрока: ");
-            namePlayer = Console.ReadLine()?.Trim();
-            Player findPlayer;
-
-            if (string.IsNullOrWhiteSpace(namePlayer))
+            public static void WindowMenu(Menu.BottomMenu bottomMenu)
             {
-                findPlayer = list.Find(p => p.Name.Equals(namePlayer,StringComparison.OrdinalIgnoreCase));
+
             }
 
-            Player.CreatePlayer(out Player player,namePlayer);
+            static void Main(string[] args)
+            {
 
-            Console.WriteLine(player.Name);
-            Console.WriteLine(player.Health);
+                List<Player> list = new List<Player>();
 
-                
+                string namePlayer;
+                Console.WriteLine("Введите имя игрока: ");
+                namePlayer = Console.ReadLine()?.Trim();
+                Player findPlayer;
 
+                if (string.IsNullOrWhiteSpace(namePlayer))
+                {
+                    findPlayer = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
+                }
+
+                Player.CreatePlayer(out Player player, namePlayer);
+
+                Console.WriteLine(player.Name);
+                Console.WriteLine(player.Health);
+
+
+
+            }
         }
     }
 }
