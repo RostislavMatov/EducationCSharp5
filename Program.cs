@@ -10,7 +10,7 @@ namespace EducationCSharp5
     internal class Program
     {
 
-        public class Player
+        class Player
         {
             public string Name { get; set; }
             public int Health { get; set; }
@@ -29,7 +29,7 @@ namespace EducationCSharp5
             }
         }
 
-        public class Enemy
+        class Enemy
         {
             public string Name { get; set; }
             public int Health { get; set; }
@@ -123,14 +123,16 @@ namespace EducationCSharp5
                 string namePlayer;
                 Console.WriteLine("Введите имя игрока: ");
                 namePlayer = Console.ReadLine()?.Trim();
-                Player findPlayer;
+                Player player;
 
                 if (string.IsNullOrWhiteSpace(namePlayer))
                 {
-                    findPlayer = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
+                    player = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
                 }
-
-                Player.CreatePlayer(out Player player, namePlayer);
+                else
+                {
+                    Player.CreatePlayer(out player, namePlayer);
+                }
 
                 Console.WriteLine(player.Name);
                 Console.WriteLine(player.Health);
