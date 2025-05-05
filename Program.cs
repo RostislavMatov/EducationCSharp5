@@ -85,22 +85,33 @@ namespace EducationCSharp5
             public struct BottomMenu
             {
                 public string Name { get; set; }
-                public string Bottom { get; set; }
+                public int Bottom { get; set; }
             }
             public Menu()
             {
-                menu = new BottomMenu[2];
+                menu = new BottomMenu[3];
 
                 BottomMenu Exit = new BottomMenu();
                 Exit.Name = "exit";
-                Exit.Bottom = "0";
+                Exit.Bottom = 0;
 
                 BottomMenu Save = new BottomMenu();
                 Save.Name = "save";
-                Save.Bottom = "9";
+                Save.Bottom = 9;
+
+                BottomMenu NewGame = new BottomMenu();
+                Save.Name = "New game";
+                Save.Bottom = 1;
+
+                BottomMenu СontinueBottom = new BottomMenu();
+                Save.Name = "Сontinue";
+                Save.Bottom = 2;
 
                 menu[0] = Exit;
                 menu[1] = Save;
+                menu[2] = NewGame;
+                menu[3] = СontinueBottom;
+
             }
 
             public static void WindowMenu(Menu menuObj)
@@ -113,10 +124,38 @@ namespace EducationCSharp5
                 }
             }
 
+
+
             static void Main(string[] args)
             {
 
                 Menu menu = new Menu();
+                string nomberMenu;
+                bool newGame = false;
+
+                Menu.WindowMenu(menu);
+
+                nomberMenu = Console.ReadLine()?.Trim();
+
+                if (int.TryParse(nomberMenu, out int nomberMenuInt))
+                {
+                    if (nomberMenuInt == 0)
+                    {
+                        return;
+                    }
+                    else if (nomberMenuInt == 1)
+                    {
+                        newGame = true;
+                    }
+                    else if (nomberMenuInt == 2)
+                    {
+
+                    }
+                    else if (nomberMenuInt == 9)
+                    {
+
+                    }
+                }
 
                 List<Player> list = new List<Player>();
 
