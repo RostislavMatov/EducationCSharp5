@@ -18,16 +18,76 @@ namespace EducationCSharp5
             public int Defense { get; set; }
             public int Experience { get; set; }
 
+            private Random random = new Random();
+
             public static void CreatePlayer(out Player player, string namePlayer)
             {
-                player = new Player();
-                player.Name = namePlayer;
-                player.Health = 10;
-                player.Strength = 1;
-                player.Defense = 0;
-                player.Experience = 0;
+                player = new Player
+                {
+                    Name = namePlayer,
+                    Health = 10,
+                    Strength = 2,
+                    Defense = 1,
+                    Experience = 0
+                };
             }
-        }
+
+            public void Attack(Enemy enemy)
+            {
+                int damage = random.Next(1, Strength + 3) - enemy.Defense;
+                if (damage > 0)
+                {
+                    enemy.Health -= damage;
+                    Console.WriteLine($"{Name} атакует {enemy.Name} и наносит {damage} урона!");
+                }
+                else
+                {
+                    Console.WriteLine($"{Name} не может нанести урон {enemy.Name} из-за его защиты!");
+                }
+            }
+
+            public void GainExperience(int amount)
+            {
+                Experience += amount;
+                Console.WriteLine($"{Name} получает {amount} опыта! Текущий опыт: {Experience}");
+
+                // Проверка на возможность повышения уровня (например, каждые 10 очков опыта)
+                if (Experience >= 10)
+                {
+                    LevelUp();
+                }
+            }
+
+            private void LevelUp()
+            {
+                Console.WriteLine($"{Name} достиг уровня! Выберите, что улучшить:");
+                Console.WriteLine("1. Здоровье (+5)");
+                Console.WriteLine("2. Сила (+1)");
+                Console.WriteLine("3. Защита (+1)");
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        Health += 5;
+                        break;
+                    case "2":
+                        Strength += 1;
+                        break;
+                    case "3":
+                        Defense += 1;
+                        break;
+                    default:
+                        Console.WriteLine("Неверный выбор.");
+                        return;
+                }
+
+                // Сброс опыта после повышения уровня
+                Experience -= 10;
+
+                Console.WriteLine($"Новые характеристики: Здоровье: {Health}, Сила: {Strength}, Защита: {Defense}");
+            }
 
         class Enemy
         {
