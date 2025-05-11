@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.SqlServer.Server;
 
 namespace EducationCSharp5
 {
     internal class Program
     {
-
         class Player
         {
             public string Name { get; set; }
@@ -151,150 +152,154 @@ namespace EducationCSharp5
             }
         }
 
-            class Vzaimodeistia
+        class SaveLoad
+        {
+            public static void SavePlayer(Player player)
             {
-                class Player
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string saveFolder = Path.Combine(documentsPath, "MyGame");
+
+                if (!Directory.Exists(saveFolder))
                 {
-                    //static int PlayerAttack(ref Enemy enemy, Player player)
-                    //{
-                    //}
-
-                    //static int PlayerDefense(string Name)
-                    //{
-                    //    return
-                    //}
-
-                    //static int PlayerTakingDamage(string Name)
-                    //{
-                    //    return
-                    //}
+                    Directory.CreateDirectory(saveFolder);
                 }
-                class Enemy
+
+                string saveFilePath = Path.Combine(saveFolder, "player.txt");
+
+                using (StreamWriter writer = new StreamWriter(saveFilePath))
                 {
-                    //static int EnemyAttack(string Name)
-                    //{
-                    //    return
-                    //}
-
-                    //static int EnemyGainingExperience(string Name)
-                    //{
-                    //    return
-                    //}
-
-                    //static int EnemyDefense(string Name)
-                    //{
-                    //    return
-                    //}
-
-                    //static int EnemyTakingDamage(string Name)
-                    //{
-                    //    return;
-                    //}
+                    writer.WriteLine(player.Name);
+                    writer.WriteLine(player.Health);
+                    writer.WriteLine(player.Defense);
+                    writer.WriteLine(player.Strength);
+                    writer.WriteLine(player.Experience);
                 }
             }
 
-            class Menu
+            public static Player LoadPlayer()
             {
-                public BottomMenu[] menu { get; set; }
-                public struct BottomMenu
+
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string saveFolder = Path.Combine(documentsPath, "MyGame");
+                string filePath = Path.Combine(saveFolder, "player.txt");
+
+                if (!File.Exists(filePath))
+                    return null;
+
+                string[] lines = File.ReadAllLines(filePath);
+
+                return new Player
                 {
-                    public string Name { get; set; }
-                    public int Bottom { get; set; }
-                }
-                public Menu()
+                    Name = lines[0],
+                    Health = int.Parse(lines[1]),
+                    Defense = int.Parse(lines[2]),
+                    Strength = int.Parse(lines[3]),
+                    Experience = int.Parse(lines[4])
+                };
+            }
+        }
+
+        class Menu
+        {
+            public BottomMenu[] menu { get; set; }
+            public struct BottomMenu
+            {
+                public string Name { get; set; }
+                public int Bottom { get; set; }
+            }
+            public Menu()
+            {
+                menu = new BottomMenu[4];
+
+                BottomMenu Exit = new BottomMenu();
+                Exit.Name = "exit";
+                Exit.Bottom = 4;
+
+                BottomMenu Save = new BottomMenu();
+                Save.Name = "save";
+                Save.Bottom = 3;
+
+                BottomMenu NewGame = new BottomMenu();
+                NewGame.Name = "New game";
+                NewGame.Bottom = 2;
+
+                BottomMenu СontinueBottom = new BottomMenu();
+                СontinueBottom.Name = "Сontinue";
+                СontinueBottom.Bottom = 1;
+
+                menu[0] = СontinueBottom;
+                menu[1] = NewGame;
+                menu[2] = Save;
+                menu[3] = Exit;
+
+            }
+
+            public static void WindowMenu(Menu menuObj)
+            {
+                Console.WriteLine("            Меню игры            ");
+                //Console.WriteLine("Нажмите                  Действие");
+                for (int i = 0; i < menuObj.menu.Length; i++)
                 {
-                    menu = new BottomMenu[3];
-
-                    BottomMenu Exit = new BottomMenu();
-                    Exit.Name = "exit";
-                    Exit.Bottom = 0;
-
-                    BottomMenu Save = new BottomMenu();
-                    Save.Name = "save";
-                    Save.Bottom = 9;
-
-                    BottomMenu NewGame = new BottomMenu();
-                    Save.Name = "New game";
-                    Save.Bottom = 1;
-
-                    BottomMenu СontinueBottom = new BottomMenu();
-                    Save.Name = "Сontinue";
-                    Save.Bottom = 2;
-
-                    menu[0] = Exit;
-                    menu[1] = Save;
-                    menu[2] = NewGame;
-                    menu[3] = СontinueBottom;
-
-                }
-
-                public static void WindowMenu(Menu menuObj)
-                {
-                    Console.WriteLine("___________Меню игры___________");
-                    Console.WriteLine("Нажмите________________Действие");
-                    for (int i = 0; i < menuObj.menu.Length; i++)
-                    {
-                        Console.WriteLine($"{menuObj.menu[i].Bottom}__________________________{menuObj.menu[i].Name}");
-                    }
-                }
-
-
-
-                static void Main(string[] args)
-                {
-
-                    Menu menu = new Menu();
-                    string nomberMenu;
-                    bool newGame = false;
-
-                    Menu.WindowMenu(menu);
-
-                    nomberMenu = Console.ReadLine()?.Trim();
-
-                    if (int.TryParse(nomberMenu, out int nomberMenuInt))
-                    {
-                        if (nomberMenuInt == 0)
-                        {
-                            return;
-                        }
-                        else if (nomberMenuInt == 1)
-                        {
-                            newGame = true;
-                        }
-                        else if (nomberMenuInt == 2)
-                        {
-
-                        }
-                        else if (nomberMenuInt == 9)
-                        {
-
-                        }
-                    }
-
-                    List<Player> list = new List<Player>();
-
-                    string namePlayer;
-                    Console.WriteLine("Введите имя игрока: ");
-                    namePlayer = Console.ReadLine()?.Trim();
-                    Player player;
-
-                    if (string.IsNullOrWhiteSpace(namePlayer))
-                    {
-                        player = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
-                    }
-                    else
-                    {
-                        Player.CreatePlayer(out player, namePlayer);
-                    }
-
-                    Console.WriteLine(player.Name);
-                    Console.WriteLine(player.Health);
-
-                    Menu.WindowMenu(menu);
-
-
+                    Console.WriteLine($"            {menuObj.menu[i].Bottom}. {menuObj.menu[i].Name}        ");
                 }
             }
         }
-    }
+
+        static void Main(string[] args)
+        {
+
+            Menu menu = new Menu();
+            string nomberMenu;
+            bool newGame = false;
+
+            Menu.WindowMenu(menu);
+
+            nomberMenu = Console.ReadLine()?.Trim();
+
+            if (int.TryParse(nomberMenu, out int nomberMenuInt))
+            {
+                if (nomberMenuInt == 0)
+                {
+                    return;
+                }
+                else if (nomberMenuInt == 1)
+                {
+                    newGame = true;
+                }
+                else if (nomberMenuInt == 2)
+                {
+
+                }
+                else if (nomberMenuInt == 9)
+                {
+
+                }
+            }
+
+            List<Player> list = new List<Player>();
+
+            string namePlayer;
+            Console.WriteLine("Введите имя игрока: ");
+            namePlayer = Console.ReadLine()?.Trim();
+            Player player;
+
+            if (string.IsNullOrWhiteSpace(namePlayer))
+            {
+                player = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                Player.CreatePlayer(out player, namePlayer);
+            }
+
+            Console.WriteLine(player.Name);
+            Console.WriteLine(player.Health);
+
+            Menu.WindowMenu(menu);
+
+
+        }
+
+    }       
+}
 
