@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.SqlServer.Server;
+using System.Runtime.InteropServices;
 
 namespace EducationCSharp5
 {
@@ -108,6 +110,27 @@ namespace EducationCSharp5
                 Defense = defense;
             }
 
+            // Фабричные методы для создания разных типов противников
+            public static Enemy CreateWeakEnemy(string name)
+            {
+                return new Enemy(name, 10, 2, 1);
+            }
+
+            public static Enemy CreateNormalEnemy(string name)
+            {
+                return new Enemy(name, 20, 4, 2);
+            }
+
+            public static Enemy CreateStrongEnemy(string name)
+            {
+                return new Enemy(name, 30, 6, 3);
+            }
+
+            public static Enemy CreateCustomEnemy(string name, int health, int strength, int defense)
+            {
+                return new Enemy(name, health, strength, defense);
+            }
+
             public void Attack(Player player)
             {
                 int damage = random.Next(1, Strength + 3) - player.Defense;
@@ -154,48 +177,64 @@ namespace EducationCSharp5
 
         class SaveLoad
         {
+            private static string GetSaveFolderPath()
+            {
+
+                string documentsPath;
+                if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+                {
+                    // Для MacOS используем папку Library/Application Support
+                    documentsPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        "Library/Application Support"
+                    );
+                }
+                else
+                {
+                    // Для Windows используем папку Мои Документы
+                    documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                }
+                return Path.Combine(documentsPath, "MyGame");
+            }
+
             public static void SavePlayer(Player player)
             {
-                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                string saveFolder = Path.Combine(documentsPath, "MyGame");
+                string saveFolder = GetSaveFolderPath();
 
                 if (!Directory.Exists(saveFolder))
                 {
                     Directory.CreateDirectory(saveFolder);
                 }
 
-                string saveFilePath = Path.Combine(saveFolder, "player.txt");
+                string saveFilePath = Path.Combine(saveFolder, "player.json");
 
-                using (StreamWriter writer = new StreamWriter(saveFilePath))
-                {
-                    writer.WriteLine(player.Name);
-                    writer.WriteLine(player.Health);
-                    writer.WriteLine(player.Defense);
-                    writer.WriteLine(player.Strength);
-                    writer.WriteLine(player.Experience);
-                }
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(player, options);
+                File.WriteAllText(saveFilePath, json);
+                Console.WriteLine($"Персонаж сохранен");
             }
 
             public static Player LoadPlayer()
             {
-
-                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                string saveFolder = Path.Combine(documentsPath, "MyGame");
-                string filePath = Path.Combine(saveFolder, "player.txt");
+                string saveFolder = GetSaveFolderPath();
+                string filePath = Path.Combine(saveFolder, "player.json");
 
                 if (!File.Exists(filePath))
-                    return null;
-
-                string[] lines = File.ReadAllLines(filePath);
-
-                return new Player
                 {
-                    Name = lines[0],
-                    Health = int.Parse(lines[1]),
-                    Defense = int.Parse(lines[2]),
-                    Strength = int.Parse(lines[3]),
-                    Experience = int.Parse(lines[4])
-                };
+                    Console.WriteLine("Файл сохранения не найден, будет создан новый список игроков.");
+                    return null;
+                }
+                try
+                {
+                    string json = File.ReadAllText(filePath);
+                    var players = JsonSerializer.Deserialize<Player>(json);
+                    return players;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при загрузке игроков: {ex.Message}");
+                    return null;
+                }
             }
         }
 
@@ -245,57 +284,127 @@ namespace EducationCSharp5
             }
         }
 
-        static void Main(string[] args)
+        private static List<Player> LoadPlayers()
         {
-
-            Menu menu = new Menu();
-            string nomberMenu;
-            bool newGame = false;
-
-            Menu.WindowMenu(menu);
-
-            nomberMenu = Console.ReadLine()?.Trim();
-
-            if (int.TryParse(nomberMenu, out int nomberMenuInt))
-            {
-                switch (nomberMenuInt)
-                {
-                    case 0:
-                        return;
-                    case 1:
-                        newGame = true;
-                        break;
-                    case 2:
-                    case 9:
-                        // Добавьте здесь необходимую логику для случаев 2 и 9
-                        break;
-                }
-            }
-
-            List<Player> list = new List<Player>();
-
-            string namePlayer;
-            Console.WriteLine("Введите имя игрока: ");
-            namePlayer = Console.ReadLine()?.Trim();
-            Player player;
-
-            if (string.IsNullOrWhiteSpace(namePlayer))
-            {
-                player = list.Find(p => p.Name.Equals(namePlayer, StringComparison.OrdinalIgnoreCase));
-            }
-            else
-            {
-                Player.CreatePlayer(out player, namePlayer);
-            }
-
-            Console.WriteLine(player.Name);
-            Console.WriteLine(player.Health);
-
-            Menu.WindowMenu(menu);
-
-
+            Player loadedPlayer = SaveLoad.LoadPlayer();
+            return loadedPlayer != null ? new List<Player> { loadedPlayer } : new List<Player>();
         }
 
-    }       
-}
+        static void Main(string[] args)
+        {
+            List<Player> players = LoadPlayers(); // Загрузка сохраненных игроков
+            Menu menu = new Menu();
+            Player currentPlayer = null;
+            bool gameLoop = true;
 
+            while (gameLoop)
+            {
+                // Настройка меню в зависимости от наличия сохраненных игроков
+                if (players.Count == 0)
+                {
+                    menu.menu = menu.menu.Where(m => m.Name != "Сontinue").ToArray();
+                }
+
+                Menu.WindowMenu(menu);
+                string choice = Console.ReadLine()?.Trim();
+
+                if (int.TryParse(choice, out int menuChoice))
+                {
+                    switch (menuChoice)
+                    {
+                        case 4: // Выход
+                            gameLoop = false;
+                            break;
+
+                        case 2: // Новая игра
+                            Console.WriteLine("Введите имя нового игрока:");
+                            string newPlayerName = Console.ReadLine()?.Trim();
+                            if (!string.IsNullOrWhiteSpace(newPlayerName))
+                            {
+                                Player.CreatePlayer(out currentPlayer, newPlayerName);
+                                players.Add(currentPlayer);
+                                StartGame(currentPlayer);
+                            }
+                            break;
+
+                        case 3: // Сохранить игру
+                            SaveLoad.SavePlayer(currentPlayer);
+                            Console.WriteLine("Игра сохранена.");
+                            break;
+
+                        case 1: // Продолжить игру
+                            currentPlayer = SaveLoad.LoadPlayer();
+                            StartGame(currentPlayer);
+                            break;
+
+                        default:
+                            Console.WriteLine("Неверный выбор.");
+                            break;
+                    }
+                }
+            }
+        }
+
+        private static void StartGame(Player player)
+        {
+            Enemy enemy = GenerateEnemy(player);
+            Console.WriteLine($"\nПротивник появился: {enemy.Name}");
+            Console.WriteLine($"Здоровье: {enemy.Health}, Атака: {enemy.Strength}, Защита: {enemy.Defense}");
+
+            while (player.Health > 0 && enemy.Health > 0)
+            {
+                Console.WriteLine("\n1. Атаковать");
+                Console.WriteLine("2. Защищаться");
+                Console.WriteLine("3. Убежать");
+
+                string action = Console.ReadLine()?.Trim();
+
+                if (action == "3")
+                {
+                    Console.WriteLine("Вы сбежали с поля боя!");
+                    break;
+                }
+
+                // Ход игрока
+                if (action == "1")
+                {
+                    int damage = player.Strength - enemy.Defense;
+                    enemy.Health -= Math.Max(1, damage);
+                    Console.WriteLine($"Вы нанесли {Math.Max(1, damage)} урона!");
+                }
+                else if (action == "2")
+                {
+                    player.Defense *= 2;
+                    Console.WriteLine("Вы приняли защитную стойку!");
+                }
+
+                if (enemy.Health <= 0)
+                {
+                    Console.WriteLine("Победа! Враг повержен!");
+                    break;
+                }
+
+                // Ход противника
+                int enemyDamage = enemy.Strength - player.Defense;
+                player.Health -= Math.Max(1, enemyDamage);
+                Console.WriteLine($"Противник нанес вам {Math.Max(1, enemyDamage)} урона!");
+
+                if (player.Defense > 0) player.Defense /= 2; // Сброс усиленной защиты
+
+                Console.WriteLine($"\nВаше здоровье: {player.Health}");
+                Console.WriteLine($"Здоровье противника: {enemy.Health}");
+            }
+        }
+
+        private static Enemy GenerateEnemy(Player player)
+        {
+            Random random = new Random();
+            Enemy enemy = new Enemy(null, 0, 0, 0);
+            enemy.Health = player.Health + random.Next(-10, 11);
+            enemy.Strength = player.Strength + random.Next(-5, 6);
+            enemy.Defense = player.Defense + random.Next(-3, 4);
+            enemy.Name = "Противник #" + random.Next(1, 100);
+            return enemy;
+        }
+    }
+}
