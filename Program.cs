@@ -258,21 +258,17 @@ namespace EducationCSharp5
 
             if (int.TryParse(nomberMenu, out int nomberMenuInt))
             {
-                if (nomberMenuInt == 0)
+                switch (nomberMenuInt)
                 {
-                    return;
-                }
-                else if (nomberMenuInt == 1)
-                {
-                    newGame = true;
-                }
-                else if (nomberMenuInt == 2)
-                {
-
-                }
-                else if (nomberMenuInt == 9)
-                {
-
+                    case 0:
+                        return;
+                    case 1:
+                        newGame = true;
+                        break;
+                    case 2:
+                    case 9:
+                        // Добавьте здесь необходимую логику для случаев 2 и 9
+                        break;
                 }
             }
 
