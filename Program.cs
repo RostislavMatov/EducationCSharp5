@@ -357,6 +357,7 @@ namespace EducationCSharp5
                 Console.WriteLine("2. Защищаться");
                 Console.WriteLine("3. Убежать");
 
+
                 string action = Console.ReadLine()?.Trim();
 
                 if (action == "3")
