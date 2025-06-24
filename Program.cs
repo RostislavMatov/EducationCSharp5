@@ -175,58 +175,50 @@ namespace EducationCSharp5
             }
         }
 
-        class SaveLoad
+        class PlayerStorage
         {
-            private static string GetSaveFolderPath()
+            private const string FileName = "players.json";
+
+            private static string GetStoragePath()
             {
-
-                string documentsPath;
-                if (Environment.OSVersion.Platform == PlatformID.MacOSX)
-                {
-                    // Для MacOS используем папку Library/Application Support
-                    documentsPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                        "Library/Application Support"
-                    );
-                }
-
-            public static void SavePlayer(Player player)
-            {
-                string saveFolder = GetSaveFolderPath();
-
-                if (!Directory.Exists(saveFolder))
-                {
-                    Directory.CreateDirectory(saveFolder);
-                }
-
-                string saveFilePath = Path.Combine(saveFolder, "player.json");
-
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(player, options);
-                File.WriteAllText(saveFilePath, json);
-                Console.WriteLine($"Персонаж сохранен");
+                // Папка Documents/MyGame
+                string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string folder = Path.Combine(documents, "MyGame");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                return Path.Combine(folder, FileName);
             }
 
-            public static Player LoadPlayer()
+            public static void SavePlayers(List<Player> players)
             {
-                string saveFolder = GetSaveFolderPath();
-                string filePath = Path.Combine(saveFolder, "player.json");
+                string path = GetStoragePath();
+                // Сериализуем в JSON (с отступами для читаемости)
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(players, options);
+                File.WriteAllText(path, json);
+                Console.WriteLine($"Сохранено {players.Count} игроков в {path}");
+            }
 
-                if (!File.Exists(filePath))
+            public static List<Player> LoadPlayers()
+            {
+                string path = GetStoragePath();
+                if (!File.Exists(path))
                 {
                     Console.WriteLine("Файл сохранения не найден, будет создан новый список игроков.");
-                    return null;
+                    return new List<Player>();
                 }
+
                 try
                 {
-                    string json = File.ReadAllText(filePath);
-                    var players = JsonSerializer.Deserialize<Player>(json);
-                    return players;
+                    string json = File.ReadAllText(path);
+                    var players = JsonSerializer.Deserialize<List<Player>>(json);
+                    Console.WriteLine($"Загружено {players.Count} игроков из {path}");
+                    return players ?? new List<Player>();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Ошибка при загрузке игроков: {ex.Message}");
-                    return null;
+                    return new List<Player>();
                 }
             }
         }
@@ -279,10 +271,11 @@ namespace EducationCSharp5
 
         static void Main(string[] args)
         {
-            List<Player> players = LoadPlayers(); // Загрузка сохраненных игроков
+            List<Player> players = PlayerStorage.LoadPlayers(); // Загрузка сохраненных игроков
             Menu menu = new Menu();
             Player currentPlayer = null;
             bool gameLoop = true;
+
 
             while (gameLoop)
             {
@@ -315,13 +308,22 @@ namespace EducationCSharp5
                             break;
 
                         case 3: // Сохранить игру
-                            SaveLoad.SavePlayer(currentPlayer);
+                            PlayerStorage.SavePlayers(players);
                             Console.WriteLine("Игра сохранена.");
                             break;
 
                         case 1: // Продолжить игру
-                            currentPlayer = SaveLoad.LoadPlayer();
-                            StartGame(currentPlayer);
+
+                            Console.WriteLine("Список сохранённых игроков:");
+                            for (int i = 0; i < players.Count; i++)
+                                Console.WriteLine($"{i + 1}. {players[i].Name}");
+
+                            Console.Write("Выберите номер игрока для продолжения или 0 — новый игрок: ");
+                            string playerNomberStr = Console.ReadLine()?.Trim();
+                            if (int.TryParse(playerNomberStr, out int playerNomber))
+                            {
+                                StartGame(players[playerNomber-1]);
+                            }
                             break;
 
                         default:
