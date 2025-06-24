@@ -189,13 +189,6 @@ namespace EducationCSharp5
                         "Library/Application Support"
                     );
                 }
-                else
-                {
-                    // Для Windows используем папку Мои Документы
-                    documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                }
-                return Path.Combine(documentsPath, "MyGame");
-            }
 
             public static void SavePlayer(Player player)
             {
@@ -282,12 +275,6 @@ namespace EducationCSharp5
                     Console.WriteLine($"            {menuObj.menu[i].Bottom}. {menuObj.menu[i].Name}        ");
                 }
             }
-        }
-
-        private static List<Player> LoadPlayers()
-        {
-            Player loadedPlayer = SaveLoad.LoadPlayer();
-            return loadedPlayer != null ? new List<Player> { loadedPlayer } : new List<Player>();
         }
 
         static void Main(string[] args)
