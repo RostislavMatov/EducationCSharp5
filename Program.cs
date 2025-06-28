@@ -29,15 +29,15 @@ namespace EducationCSharp5
                 {
                     Name = namePlayer,
                     Health = 10,
-                    Strength = 2,
-                    Defense = 1,
+                    Strength = 3,
+                    Defense = 2,
                     Experience = 0
                 };
             }
 
             public void Attack(Enemy enemy)
             {
-                int damage = random.Next(1, Strength + 3) - enemy.Defense;
+                int damage = random.Next(Strength - 1, Strength + 3) - random.Next(0,enemy.Defense);
                 if (damage > 0)
                 {
                     enemy.Health -= damage;
@@ -91,6 +91,13 @@ namespace EducationCSharp5
 
                 Console.WriteLine($"Новые характеристики: Здоровье: {Health}, Сила: {Strength}, Защита: {Defense}");
             }
+
+            public void ShowStats()
+            {
+                Console.WriteLine($"[{Name}] HP: {Health}, STR: {Strength}, DEF: {Defense}, XP: {Experience}");
+            }
+
+
         }
 
         class Enemy
@@ -113,17 +120,17 @@ namespace EducationCSharp5
             // Фабричные методы для создания разных типов противников
             public static Enemy CreateWeakEnemy(string name)
             {
-                return new Enemy(name, 10, 2, 1);
+                return new Enemy(name, 5, 2, 1);
             }
 
             public static Enemy CreateNormalEnemy(string name)
             {
-                return new Enemy(name, 20, 4, 2);
+                return new Enemy(name, 10, 4, 2);
             }
 
             public static Enemy CreateStrongEnemy(string name)
             {
-                return new Enemy(name, 30, 6, 3);
+                return new Enemy(name, 15, 6, 3);
             }
 
             public static Enemy CreateCustomEnemy(string name, int health, int strength, int defense)
@@ -133,7 +140,7 @@ namespace EducationCSharp5
 
             public void Attack(Player player)
             {
-                int damage = random.Next(1, Strength + 3) - player.Defense;
+                int damage = random.Next(Strength - 1, Strength + 3) - random.Next(0, player.Defense);
                 if (damage > 0)
                 {
                     player.Health -= damage;
@@ -299,7 +306,11 @@ namespace EducationCSharp5
                         case 2: // Новая игра
                             Console.WriteLine("Введите имя нового игрока:");
                             string newPlayerName = Console.ReadLine()?.Trim();
-                            if (!string.IsNullOrWhiteSpace(newPlayerName))
+                            if (players.Any(p => p.Name.Equals(newPlayerName, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                Console.WriteLine("Игрко с таким именем уже создан");
+                            }
+                            else
                             {
                                 Player.CreatePlayer(out currentPlayer, newPlayerName);
                                 players.Add(currentPlayer);
@@ -322,7 +333,14 @@ namespace EducationCSharp5
                             string playerNomberStr = Console.ReadLine()?.Trim();
                             if (int.TryParse(playerNomberStr, out int playerNomber))
                             {
-                                StartGame(players[playerNomber-1]);
+                                if (playerNomber > 0 && playerNomber <= players.Count)
+                                {
+                                    StartGame(players[playerNomber - 1]);  
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Неверный номер игрока.");
+                                }
                             }
                             break;
 
@@ -346,40 +364,47 @@ namespace EducationCSharp5
                 Console.WriteLine("2. Защищаться");
                 Console.WriteLine("3. Убежать");
 
+                bool defensePlus = false;
 
                 string action = Console.ReadLine()?.Trim();
 
                 if (action == "3")
                 {
                     Console.WriteLine("Вы сбежали с поля боя!");
-                    break;
                 }
 
                 // Ход игрока
                 if (action == "1")
                 {
-                    int damage = player.Strength - enemy.Defense;
-                    enemy.Health -= Math.Max(1, damage);
-                    Console.WriteLine($"Вы нанесли {Math.Max(1, damage)} урона!");
+                    player.Attack(enemy);
                 }
                 else if (action == "2")
                 {
-                    player.Defense *= 2;
+                    defensePlus = true;
                     Console.WriteLine("Вы приняли защитную стойку!");
                 }
 
                 if (enemy.Health <= 0)
                 {
                     Console.WriteLine("Победа! Враг повержен!");
+                    player.GainExperience(10);
+                    player.ShowStats();
                     break;
                 }
 
+                int enemyDamage = 0;
+
                 // Ход противника
-                int enemyDamage = enemy.Strength - player.Defense;
+                if (defensePlus) {
+                    enemyDamage = enemy.Strength - player.Defense * 2;
+                }
+                else
+                {
+                    enemyDamage = enemy.Strength - player.Defense;
+                }
+
                 player.Health -= Math.Max(1, enemyDamage);
                 Console.WriteLine($"Противник нанес вам {Math.Max(1, enemyDamage)} урона!");
-
-                if (player.Defense > 0) player.Defense /= 2; // Сброс усиленной защиты
 
                 Console.WriteLine($"\nВаше здоровье: {player.Health}");
                 Console.WriteLine($"Здоровье противника: {enemy.Health}");
@@ -390,9 +415,9 @@ namespace EducationCSharp5
         {
             Random random = new Random();
             Enemy enemy = new Enemy(null, 0, 0, 0);
-            enemy.Health = player.Health + random.Next(-10, 11);
-            enemy.Strength = player.Strength + random.Next(-5, 6);
-            enemy.Defense = player.Defense + random.Next(-3, 4);
+            enemy.Health = player.Health + random.Next(1, 5);
+            enemy.Strength = player.Strength + random.Next(1, 3);
+            enemy.Defense = player.Defense + random.Next(1, 2);
             enemy.Name = "Противник #" + random.Next(1, 100);
             return enemy;
         }
